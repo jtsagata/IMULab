@@ -246,6 +246,8 @@ T2t =
              
 \end{verbatim}
 
+\subsection{Conclusions}
+The results is the same as expected and our caluclations are correct.
 
 \section{Matlab Tests}
 \subsection{Test1}
@@ -281,7 +283,7 @@ H4pt =
     0.7545    1.5987    0.9532
     1.2558   -1.2442    1.0000
 \end{verbatim}
-
+The results is the same as expected.
 
 \subsubsection{The 2 points algorithm}
 
@@ -312,6 +314,7 @@ EstimatedH =
     1.0049    0.1772   -0.0236
    -0.1772    1.0049   -0.0166
 \end{verbatim}
+The results is the same as expected.
 
 \subsection{Test2}
 Example with noise, propose a test with different camera positions $(R1 =
@@ -336,19 +339,35 @@ The Theoretical Homography
 
 H =
 
-    1.0204    0.0893   -0.1072
-   -0.0848    1.0233    0.0665
-    0.0938   -0.0458    1.0000
+    1.1010    0.2950   -0.9308
+   -0.0459    1.4353    0.4211
+    0.9999   -0.2590    1.0000
 
 Estimated Homography (4 Point Algorithm)
 
+H4ptS =
+
+    1.1010    0.2950   -0.9308
+   -0.0459    1.4353    0.4211
+    0.9999   -0.2590    1.0000
+
+Estimated Homography (4 Point RANSAC Algorithm)
+
 H4pt =
 
-    1.0200    0.0894   -0.1066
-   -0.0847    1.0228    0.0669
-    0.0937   -0.0457    1.0000
+    1.1010    0.2950   -0.9308
+   -0.0459    1.4353    0.4211
+    0.9999   -0.2590    1.0000
 
-Error(SSD) in 4 point estimation, with noise is : 9.8211e-07
+Errors using Ransac
+
+diff =
+
+   444.0892e-018   610.6227e-018  -333.0669e-018
+  -215.1057e-018  -222.0446e-018   166.5335e-018
+  -444.0892e-018   388.5781e-018     0.0000e+000
+
+Error(SSD) in 4 point estimation, with noise is : 1.1525e-30
 \end{verbatim}
 
 
@@ -362,28 +381,49 @@ Theoretical Homography (2 angles known)
 
 HV2 =
 
-    0.9962    0.0872   -0.0189
-   -0.0872    0.9962    0.0137
-         0         0    0.9800
+    0.9659    0.2588   -0.0110
+   -0.2588    0.9659    0.0361
+         0         0    0.9600
 
 True Theoretical Homography (2 angles known)
 
 TrueHomography =
 
-    1.0165    0.0889   -0.0193
-   -0.0889    1.0165    0.0140
+    1.0062    0.2696   -0.0115
+   -0.2696    1.0062    0.0376
          0         0    1.0000
 
-Estimated Homography (2+1 Point Algorithm)
+Estimated Homography (2+1 Point Algorithm RANSAC)
 
 EstimatedH =
 
-    1.0204    0.0893   -0.1072
-   -0.0848    1.0233    0.0665
-    0.0938   -0.0458    1.0000
+    1.1010    0.2950   -0.9308
+   -0.0459    1.4353    0.4211
+    0.9999   -0.2590    1.0000
 
-Error(SSD) in 2 point estimation, with noise is : 0.021467
+Estimated Homography (2+1 Point Algorithm No RANSAC)
+
+EstimatedH2 =
+
+    1.0062    0.2696   -0.0115
+   -0.2696    1.0062    0.0376
+         0         0    1.0000
+
+Errors using Ransac
+
+diff =
+
+   -94.8593e-003   -25.4175e-003   919.2915e-003
+  -223.6908e-003  -429.1107e-003  -383.5226e-003
+  -999.8786e-003   258.9614e-003     0.0000e+000
+
+Error(SSD) in 2 point estimation, with noise is : 2.3028
 \end{verbatim}
+
+\subsubsection{Conclusions}
+Due to noise we get different results as expected. Both results obtained from RANSAC algorithm are 
+approching the ground truth and the difference has minimized. Most outliers are removed and we dont get exactly thes smae results.
+
 
 \subsection{Test3}
 Example with noise on IMU informations, propose a test with different camera positions $(R1 =
@@ -455,6 +495,13 @@ EstimatedH =
 Error(SSD) in 2 point estimation, with noise is : 0.02289
 \end{verbatim}
 
+\section{Conclusion}
+In this practical work, we test the 4 pts and 2 pts algorithms for the scenario
+of points on the plane and on the vertical plane respectively. Then the
+algorithms are tested with noisy points and noisy IMU information. The
+estimated results are approaching the ground truth.
+
+The code of this project is on Github repository \url{https://github.com/jtsagata/IMULab}.
 
 \clearpage
 \end{document} % NOTHING AFTER THIS LINE IS PART OF THE DOCUMENT

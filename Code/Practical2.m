@@ -4,19 +4,16 @@
 %%%%%%%%%%%%%%%%%%%%%      2 points algorithm with IMU         %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%        planar scene : homography         %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Name : Tsagkatatis Ioannis
-
-% test 2
-% Example with noise, propose a test with different camera positions $(R1 =
-% I, T1 = 0)$ with angles of rotation between $\rad{0}$ and $\rad{45}$ and translation of 0 to
-% 100 AND white noise in image points of camera 2 between 0 to 1 pixel std (use
-% RANSAC functions).
+% Name :
+%
+%
+%
 %
 
-close all;
-clear all;
-clc
+close all
+clear all
 
+%test 1 : example with a particular data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%    data generation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -24,8 +21,8 @@ clc
 
 lowerbound=-300;
 upperbound=300;
-nbpoints = 50;
-zposition = 500;
+nbpoints = 50
+zposition = 500
 P=[lowerbound + (upperbound-lowerbound).*rand(nbpoints,1),...
     lowerbound + (upperbound-lowerbound).*rand(nbpoints,1),...
     zposition*ones(nbpoints,1),...
@@ -40,9 +37,9 @@ K1=[f 0 u0 0;0 f v0 0;0 0 1 0];
 
 %%%%%%%%%%%%%%%%%%%%%%%    camera 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % camera position at time 1
-tx1=0; ty1=0; tz1=0;
+tx1=10; ty1=-2; tz1=20;
 % rotation angles in degree
-roll1=0; pitch1=0; yaw1=0;
+roll1=5; pitch1=5; yaw1=30;
 
 % rotation of the camera 1
 
@@ -64,11 +61,11 @@ for i =1 : nbpoints
     P1(i,:) = K1*[R1' , -R1'*T1; 0 0 0 1]*P(i,:)';
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%    camera 2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%    camera 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % camera position at time 2
-tx2=10; ty2=-16; tz2=20;
+tx2=10; ty2=-6; tz2=10;
 % rotation angles in degree
-roll2=20; pitch2=40; yaw2=15;
+roll2=3; pitch2=5; yaw2=5;
 
 % rotation of the camera 2
 
@@ -91,14 +88,7 @@ for i =1 : nbpoints
     P2(i,:) = K1*[R2' , -R2'*T2; 0 0 0 1]*P(i,:)';
 end
 
-% Add white Noise
-std1 = 0.5;
-P2_n = P2 + std1.*rand(size(P2));
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%    Display data    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%%%%%%%%%    display data     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % figure
 % hold on
 % plot3(P(:,1),P(:,2),P(:,3),'*')
@@ -124,58 +114,36 @@ P2_n = P2 + std1.*rand(size(P2));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Theoretical Homography H :
+
 N = [0,0,1]';
 d = (N'*T1-zposition); 
+% explain why d is expressed like this!
 
-% get the rotation and trsnlation between two camera and calculate
-% theoreotical homography H
+
+
 Rt = R2'*R1;
 Tt = R2'*(T1-T2);
 H = Rt-Tt*(R1'*N)'/d;
-H=H/H(3,3);
+H=H/H(3,3)
+HP1 = H*P1(1,:)';
+HP1 = HP1/HP1(3)
+GroundTruth = (P2(1,:)/P2(1,3))'
+
 
 % Homography estimation
-H4ptS=homography2d(P1',P2');
-H4ptS=H4ptS/H4ptS(3,3);
+H4pt=homography2d(P1',P2');
+H4pt=H4pt/H4pt(3,3)
 
-% And With RANSAC
-[H4pt, inliers] = ransacfithomography(P1', P2', 0.005);
-H4pt=H4pt/H4pt(3,3);
-
-
-%
-% Display results
-%
-disp('### TEST 2 ##');
-disp('The Theoretical Homography');
-H
-disp('Estimated Homography (4 Point Algorithm)');
-H4ptS
-
-disp('Estimated Homography (4 Point RANSAC Algorithm)');
-H4pt
-
-%
-% Error calculation
+% Homography decomposition
+% solutions = invhomog(H4pt);
 % 
-%4 point error with noise
-format shortEng
-disp('Errors using Ransac');
-diff = H - H4pt
-format
-
-error = sum(sum((H - H4pt).^2));
-disp(['Error(SSD) in 4 point estimation, with noise is : ', num2str(error)]);
-
-% disp('Differences between using and not using RANSAC');
-% format shortEng
-% diff = H4ptS - H4ptS
-% format
+% solutions(1).T(:,4)/solutions(1).T(3,4);
+% solutions(1).T(1:3,1:3)
+% 
+% solutions(2).T(:,4)/solutions(2).T(3,4);
+% solutions(2).T(1:3,1:3);
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%    2 pts algorithm %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % HYPOTHESIS roll and pitch angles are known :
 
@@ -186,51 +154,60 @@ PV2 = (Rp2*Rr2*P2(:,1:3)')';
 % 2 points algorithm
 N =[0 0 1]';
 
-% Theoretical Homogrphy calculation
-HV2 = Ry2'*Ry1-Ry2'*(T1-T2)/(N'*T1-zposition)*(Ry1'*N)';
+HV2 = Ry2'*Ry1-Ry2'*(T1-T2)/(N'*T1-zposition)*(Ry1'*N)'
 
-% True  homography 
-TrueHomography = HV2/HV2(3,3);
+HV2*PV1(2,:)'/norm(HV2*PV1(2,:)')
+GroundTruth = (PV2(2,:)/norm(PV2(2,:)))'
+TrueHomography = HV2/HV2(3,3)
+
+H = homography2d2Pt(PV1',PV2');
+
+EstimatedH=H/H(3,3)
 
 
-% Homography estimation using the noisy points
-H4pt=homography2d(P1',P2_n');
-H4pt=H4pt/H4pt(3,3);
 
 
-%***********************************************************************
-%****************** ransac algorithm for test 2   **********************
-%***********************************************************************
+%%%%%%%%%%%%%%%%Yaw Estimation (see exercice 1)
 
-% Estimated homography from 2 point emthod
-H2 = homography2d2Pt(PV1',PV2');
-EstimatedH2=H2/H2(3,3);
+Yaw= atan2(H(2,1),H(1,1))
+YawGroundTruth=deg2rad(yaw1-yaw2)
 
-[H2pt, inliers] = ransacfithomography2pt(PV1', PV2', 0.005);
-EstimatedH=H/H(3,3);
+Azimuth=atan2(H(2,3),H(1,3));
+SEalpha=-((sin(Yaw)/H(2,1))-1);
+CEalpha=(-sin(Yaw)/H(2,1)*H(1,3))/cos(Azimuth);
+Elevation=atan2(SEalpha,CEalpha);
+T2E = [cos(Azimuth)*cos(Elevation);sin(Azimuth)*cos(Elevation);sin(Elevation)];
 
+
+T2t=Ry2'*(T1-T2);
+T2t/T2t(3)
+T2E/T2E(3)
+
+
+
+
+%test 2 : example with different datas
+% propose a test with different camera position
+% R1 = I, T1 = 0
+% angles of rotation of camera 2 between 0° and 45°
+% translation of 0 to 100
+
+
+
+%test 3 : example with noise
+% propose a test with different camera position
+% R1 = I, T1 = 0
+% angles of rotation of camera 2 between 0° and 45°
+% translation of 0  to 100
+% AND white noise in image points of camera 2 between 0 to 1 pixel std
 %
-% Display results
-%
-disp('');
-disp('### TEST 2 ##');
-disp('Theoretical Homography (2 angles known)');
-HV2
-disp('True Theoretical Homography (2 angles known)');
-TrueHomography
-disp('Estimated Homography (2+1 Point Algorithm RANSAC)');
-EstimatedH
-disp('Estimated Homography (2+1 Point Algorithm No RANSAC)');
-EstimatedH2
 
-%
-% Error calculation
-% 
-%2 point error with noise
-format shortEng
-disp('Errors using Ransac');
-diff =TrueHomography - EstimatedH
-format
 
-error = sum(sum((TrueHomography - EstimatedH).^2));
-disp(['Error(SSD) in 2 point estimation, with noise is : ', num2str(error)]);
+%test 4 : example with noise on IMU inforamtion
+% propose a test with different camera position
+% R1 = I, T1 = 0
+% angles of rotation of camera 2 between 0° and 45°
+% translation of 0  to 100
+% AND white noise in image points of camera 2 between 0 to 1 pixel std
+% AND white noise in IMU 2 between 0 to 2°
+
